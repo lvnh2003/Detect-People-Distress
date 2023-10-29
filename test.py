@@ -1,39 +1,41 @@
+import cv2
+import imutils
 import numpy as np
-import supervision as sv
-from ultralytics import YOLO
 
-model = YOLO('yolov8s.pt')
-MARKET_SQUARE_VIDEO_PATH = "/market-square.mp4"
-# initiate polygon
-MALL_VIDEO_PATH = "mall.mp4"
-SUBWAY_VIDEO_PATH = "/subway.mp4"
+protopath = "model/MobileNetSSD_deploy.prototxt"
+modelpath = "model/MobileNetSSD_deploy.caffemodel"
+detector = cv2.dnn.readNetFromCaffe(protopath, modelpath)
 
-# initiate polygon zone
-polygon = np.array([
-    [1725, 1550],
-    [2725, 1550],
-    [3500, 2160],
-    [1250, 2160]
-])
-video_info = sv.VideoInfo.from_video_path(MALL_VIDEO_PATH)
-zone = sv.PolygonZone(polygon=polygon, frame_resolution_wh=video_info.resolution_wh)
+CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat",
+           "bottle", "bus", "car", "cat", "chair", "cow", "diningtable",
+           "dog", "horse", "motorbike", "person", "pottedplant", "sheep",
+           "sofa", "train", "tvmonitor"]
 
-# initiate annotators
-box_annotator = sv.BoxAnnotator(thickness=4, text_thickness=4, text_scale=2)
-zone_annotator = sv.PolygonZoneAnnotator(zone=zone, color=sv.Color.white(), thickness=6, text_thickness=6, text_scale=4)
+cap = cv2.VideoCapture("7.mp4")
 
-def process_frame(frame: np.ndarray, _) -> np.ndarray:
-    # detect
-    results = model(frame, imgsz=1280)[0]
-    detections = sv.Detections.from_ultralytics(results)
-    detections = detections[detections.class_id == 0]
-    zone.trigger(detections=detections)
+while True:
+    ret, frame = cap.read()
+    frame = imutils.resize(frame, width=600)
 
-    # annotate
-    box_annotator = sv.BoxAnnotator(thickness=4, text_thickness=4, text_scale=2)
-    frame = box_annotator.annotate(scene=frame, detections=detections)
-    frame = zone_annotator.annotate(scene=frame)
+    (H, W) = frame.shape[:2]
+    blob = cv2.dnn.blobFromImage(frame, 0.007843, (W, H), 127.5)
+    detector.setInput(blob)
+    person_detections = detector.forward()
 
-    return frame
+    for i in np.arange(0, person_detections.shape[2]):
+        confidence = person_detections[0, 0, i, 2]
+        if confidence > 0.5:
+            idx = int(person_detections[0, 0, i, 1])
+            if CLASSES[idx] != "person":
+                continue
 
-sv.process_video(source_path=MALL_VIDEO_PATH, target_path="mall-result.mp4", callback=process_frame)
+            person_box = person_detections[0, 0, i, 3:7] * np.array([W, H, W, H])
+            (startX, startY, endX, endY) = person_box.astype("int")
+            cv2.rectangle(frame, (startX, startY), (endX, endY), (0, 0, 255), 2)
+
+    cv2.imshow("Application", frame)
+    key = cv2.waitKey(1)
+    if key == ord("q"):
+        break
+
+cv2.destroyAllWindows()

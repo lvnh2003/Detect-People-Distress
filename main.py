@@ -9,8 +9,6 @@ points = []
 def handle_left_click(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDOWN:
         points.append([x, y])
-
-
 def draw_polygon(frame, points):
     for point in points:
         frame = cv2.circle(frame, (point[0], point[1]), 5, (0, 0, 255), -1)
@@ -24,7 +22,6 @@ def process_frame(frame: np.ndarray, _) -> np.ndarray:
     detections = sv.Detections.from_ultralytics(results)
     detections = detections[detections.class_id == 0]
     zone.trigger(detections=detections)
-
     # annotate
     box_annotator = sv.BoxAnnotator(thickness=4, text_thickness=4, text_scale=2)
     frame = box_annotator.annotate(scene=frame, detections=detections, skip_label=True)
@@ -57,21 +54,12 @@ while cap.isOpened():
     success, frame = cap.read()
     # results = model.track(frame, persist=True)
     frame = cv2.flip(frame, 1)
-    # frame = process_frame(frame, None)
-    results = model.track(frame, persist=True)[0]
-    detections = sv.Detections.from_ultralytics(results)
-    detections = detections[detections.class_id == 0]
-    zone.trigger(detections=detections)
-    #
-    # # annotate
-    # box_annotator = sv.BoxAnnotator(thickness=4, text_thickness=4, text_scale=2)
-    # frame = box_annotator.annotate(scene=frame, detections=detections, skip_label=True)
+    frame = process_frame(frame, None)
 
 
-
-    annotated_frame = results.plot()
-    frame_with_polygon = draw_polygon(annotated_frame.copy(), points)
-    cv2.imshow("Intrusion Warning", frame_with_polygon)
+    # annotated_frame = results.plot()
+    # frame_with_polygon = draw_polygon(annotated_frame.copy(), points)
+    cv2.imshow("Intrusion Warning", frame)
 
     cv2.setMouseCallback("Intrusion Warning", handle_left_click)
 
