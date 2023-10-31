@@ -13,7 +13,7 @@ import time
 # Thay đổi các giá trị dưới đây để phù hợp với thông tin của bạn
 token = '6118554466:AAG_fvbrs22py40Kvl8AM1Acgy2dvdYLpQU'
 receiver_id = 6363898417
-video_path = '7.mp4'
+video_path = '5.mp4'
 yolov7_weights_path = './yolov7-w6-pose.pt'
 
 bot = telepot.Bot(token)
@@ -31,12 +31,12 @@ if not cap.isOpened():
 frame_width = int(cap.get(3))
 frame_height = int(cap.get(4))
 
-vid_write_image = letterbox(cap.read()[1], frame_width, stride=64, auto=True)[0]
+vid_write_image = letterbox(cap.read()[1], frame_width, stride=100, auto=True)[0]
 resize_height, resize_width = vid_write_image.shape[:2]
-out_video_name = f"{video_path.split('/')[-1].split('.')[0]}"
-out = cv2.VideoWriter(f"{out_video_name}_keypoint.mp4",
-                      cv2.VideoWriter_fourcc(*'mp4v'), 30,
-                      (resize_width, resize_height))
+# out_video_name = f"{video_path.split('/')[-1].split('.')[0]}"
+# out = cv2.VideoWriter(f"{out_video_name}_keypoint.mp4",
+#                       cv2.VideoWriter_fourcc(*'mp4v'), 30,
+#                       (resize_width, resize_height))
 
 frame_count = 0
 cv2.namedWindow("Fall Detection Video", cv2.WINDOW_NORMAL)
@@ -86,16 +86,12 @@ while cap.isOpened:
                 cv2.rectangle(im0, (int(xmin), int(ymin)), (int(xmax), int(ymax)), color=(0, 0, 255),
                               thickness=5, lineType=cv2.LINE_AA)
                 cv2.putText(im0, 'Person Fell down', (11, 100), 0, 1, [0, 0, 255], thickness=3, lineType=cv2.LINE_AA)
-                current_time = time.time()
-                elapsed_time = current_time - start_time
-                if elapsed_time >= 10.0:
-                    bot.sendMessage(receiver_id, "Person Fall Detected")
-                    start_time = time.time()
+            
+                bot.sendMessage(receiver_id, "Person Fall Detected")
                 filename = "./savedImage.jpg"
                 cv2.imwrite(filename, im0)
                 bot.sendPhoto(receiver_id, photo=open(filename, 'rb'))
                 os.remove(filename)
-        out.write(im0)
 
         cv2.imshow("Fall Detection Video", im0)
 
