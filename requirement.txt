@@ -1,0 +1,5 @@
+telepot
+opencv-python
+torchvision
+tqdm
+seaborn
