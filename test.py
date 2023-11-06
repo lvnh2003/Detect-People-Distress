@@ -1,41 +1,54 @@
+import torch
+import torchvision.transforms as T
+from torchvision.models.detection import fasterrcnn_resnet50_fpn
 import cv2
-import imutils
-import numpy as np
 
-protopath = "model/MobileNetSSD_deploy.prototxt"
-modelpath = "model/MobileNetSSD_deploy.caffemodel"
-detector = cv2.dnn.readNetFromCaffe(protopath, modelpath)
+# Load the model from the checkpoint
+model = fasterrcnn_resnet50_fpn(pretrained=False)
+model.load_state_dict(torch.load("./detect/train/weights/best.pt"))
+model.eval()
 
-CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat",
-           "bottle", "bus", "car", "cat", "chair", "cow", "diningtable",
-           "dog", "horse", "motorbike", "person", "pottedplant", "sheep",
-           "sofa", "train", "tvmonitor"]
+# Define the image transformations
+transform = T.Compose([T.ToPILImage(), T.ToTensor()])
 
-cap = cv2.VideoCapture("7.mp4")
+# Open the video capture
+video_capture = cv2.VideoCapture("7.mp4")  # Replace with the path to your video
+
+# Define the VideoWriter to save the output
+output_path = "output_video.mp4"
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+output_video = cv2.VideoWriter(output_path, fourcc, 30.0, (640, 480))  # Adjust frame size and frame rate as needed
 
 while True:
-    ret, frame = cap.read()
-    frame = imutils.resize(frame, width=600)
-
-    (H, W) = frame.shape[:2]
-    blob = cv2.dnn.blobFromImage(frame, 0.007843, (W, H), 127.5)
-    detector.setInput(blob)
-    person_detections = detector.forward()
-
-    for i in np.arange(0, person_detections.shape[2]):
-        confidence = person_detections[0, 0, i, 2]
-        if confidence > 0.5:
-            idx = int(person_detections[0, 0, i, 1])
-            if CLASSES[idx] != "person":
-                continue
-
-            person_box = person_detections[0, 0, i, 3:7] * np.array([W, H, W, H])
-            (startX, startY, endX, endY) = person_box.astype("int")
-            cv2.rectangle(frame, (startX, startY), (endX, endY), (0, 0, 255), 2)
-
-    cv2.imshow("Application", frame)
-    key = cv2.waitKey(1)
-    if key == ord("q"):
+    ret, frame = video_capture.read()
+    if not ret:
         break
 
-cv2.destroyAllWindows()
+    image = transform(frame)
+
+    # Make the prediction
+    with torch.no_grad():
+        prediction = model([image])
+
+    # Access the predicted bounding boxes, labels, and scores
+    boxes = prediction[0]['boxes']
+    labels = prediction[0]['labels']
+    scores = prediction[0]['scores']
+
+    for box, label, score in zip(boxes, labels, scores):
+        if score > 0.7:  # Adjust the threshold as needed
+            # Draw bounding box on the frame
+            color = (0, 255, 0)  # BGR color code (green)
+            cv2.rectangle(frame, (int(box[0]), int(box[1])), (int(box[2]), int(box[3]), color, 2))
+            cv2.putText(frame, f"Label: {label}, Score: {score:.2f}", (int(box[0]), int(box[1]) - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+
+            # Write the frame to the output video
+            output_video.write(frame)
+
+            # Release the video capture and output video
+            video_capture.release()
+            output_video.release()
+
+            # Destroy any OpenCV windows opened during processing
+            cv2.destroyAllWindows()

@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 1
+names: ['fall']
+
+roboflow:
+  workspace: bmu-p6uoz
+  project: fal-o6dmz
+  version: 6
+  license: Public Domain
+  url: https://universe.roboflow.com/bmu-p6uoz/fal-o6dmz/dataset/6
