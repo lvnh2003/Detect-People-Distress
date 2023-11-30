@@ -13,7 +13,7 @@ from ultralytics import YOLO
 token = '6118554466:AAG_fvbrs22py40Kvl8AM1Acgy2dvdYLpQU'
 receiver_id = 6363898417 # https://api.telegram.org/bot<TOKEN>/getUpdates
 video_path = '7.mp4'
-yolov7_weights_path = './yolov7-w6-pose.pt'
+yolov7_weights_path = '/home/lvnh/PycharmProjects/Detect-People-Distress/detect/train/weights/best.pt'
 bot = telepot.Bot(token)
 if torch.cuda.is_available():
     print("run with GPU")

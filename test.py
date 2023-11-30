@@ -1,54 +1,71 @@
-import torch
-import torchvision.transforms as T
-from torchvision.models.detection import fasterrcnn_resnet50_fpn
 import cv2
+from ultralytics import YOLO
+import torch
 
-# Load the model from the checkpoint
-model = fasterrcnn_resnet50_fpn(pretrained=False)
-model.load_state_dict(torch.load("./detect/train/weights/best.pt"))
-model.eval()
+import numpy as np
+import time
+from datetime import datetime
+from funtions import DetectFunction
+points = []
+last_alert_time = time.time()
+alert_interval = 15
+def handle_left_click(event, x, y, flags, param):
+    if event == cv2.EVENT_LBUTTONDOWN:
+        points.append([x, y])
+def draw_polygon(frame, points):
+    for point in points:
+        frame = cv2.circle(frame, (point[0], point[1]), 5, (0, 0, 255), -1)
+    if len(points) > 1:
+        frame = cv2.polylines(frame, [np.array(points)], isClosed=False, color=(255, 0, 0), thickness=2)
+    return frame
+# Đặt thiết bị là GPU nếu có sẵn, nếu không thì là CPU
+if torch.cuda.is_available():
+    print("run with GPU")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+# Load the YOLOv8 model
+model = YOLO('/home/lvnh/PycharmProjects/Detect-People-Distress/detect/train/weights/best.pt').float().to(device)
+functions = DetectFunction()
+# Open the video file
+video_path = "7.mp4"
+cap = cv2.VideoCapture(video_path)
 
-# Define the image transformations
-transform = T.Compose([T.ToPILImage(), T.ToTensor()])
+# Loop through the video frames
+while cap.isOpened():
+    # Read a frame from the video
+    success, frame = cap.read()
 
-# Open the video capture
-video_capture = cv2.VideoCapture("7.mp4")  # Replace with the path to your video
+    if success:
+        frame = draw_polygon(frame, points)
+        # Run YOLOv8 inference on the frame
+        results = model(frame, conf=0.7, verbose=False)
 
-# Define the VideoWriter to save the output
-output_path = "output_video.mp4"
-fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-output_video = cv2.VideoWriter(output_path, fourcc, 30.0, (640, 480))  # Adjust frame size and frame rate as needed
+        if len(results[0]) > 0:
+            cv2.putText(frame,"Fall detect!!!!", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
+            current_time = time.time()
+            if current_time - last_alert_time >= alert_interval:
+                last_alert_time = current_time
+                image_path = "detected_object.jpg"
+                cv2.imwrite(image_path, frame)
+                # Save the frame as an image
+                functions.sendMessage(image_path)
 
-while True:
-    ret, frame = video_capture.read()
-    if not ret:
+
+        # Convert the annotated frame back to numpy array and move it to CPU for display
+        annotated_frame = results[0].plot()
+
+        # Display the annotated frame
+        cv2.imshow("YOLOv8 Inference", annotated_frame)
+        cv2.setMouseCallback("YOLOv8 Inference", handle_left_click)
+        # Break the loop if 'q' is pressed
+        key = cv2.waitKey(1)
+        if key == ord("d"):
+            points.append(points[0])
+        elif key == ord("q"):
+            break
+    else:
+        # Break the loop if the end of the video is reached
         break
 
-    image = transform(frame)
-
-    # Make the prediction
-    with torch.no_grad():
-        prediction = model([image])
-
-    # Access the predicted bounding boxes, labels, and scores
-    boxes = prediction[0]['boxes']
-    labels = prediction[0]['labels']
-    scores = prediction[0]['scores']
-
-    for box, label, score in zip(boxes, labels, scores):
-        if score > 0.7:  # Adjust the threshold as needed
-            # Draw bounding box on the frame
-            color = (0, 255, 0)  # BGR color code (green)
-            cv2.rectangle(frame, (int(box[0]), int(box[1])), (int(box[2]), int(box[3]), color, 2))
-            cv2.putText(frame, f"Label: {label}, Score: {score:.2f}", (int(box[0]), int(box[1]) - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
-
-            # Write the frame to the output video
-            output_video.write(frame)
-
-            # Release the video capture and output video
-            video_capture.release()
-            output_video.release()
-
-            # Destroy any OpenCV windows opened during processing
-            cv2.destroyAllWindows()
+        # Release the video capture object and close the display window
+cap.release()
+cv2.destroyAllWindows()
