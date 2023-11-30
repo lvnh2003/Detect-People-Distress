@@ -8,9 +8,15 @@ import cv2,time,sys,sysinfo
 import numpy as np
 import random as rnd
 from Tracking_Func import Tack_Object
-#import RPi.GPIO as IO
+from ultralytics import YOLO
+import torch
+from funtions import DetectFunction
 
-
+functions = DetectFunction()
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+model = YOLO('./detect/train/weights/best.pt').float().to(device)
+last_alert_time = time.time()
+alert_interval = 15
 class ThreadClass(QThread):
     ImageUpdate = pyqtSignal(np.ndarray)
     FPS = pyqtSignal(int)
@@ -18,9 +24,9 @@ class ThreadClass(QThread):
 
     def run(self):
         if camIndex == 0:
-            Capture = cv2.VideoCapture(camIndex)
+            Capture = cv2.VideoCapture("7.mp4")
         if camIndex == 1:
-            Capture = cv2.VideoCapture(camIndex,cv2.CAP_DSHOW)
+            Capture = cv2.VideoCapture("5.mp4")
 
         Capture.set(cv2.CAP_PROP_FRAME_HEIGHT,480)
         Capture.set(cv2.CAP_PROP_FRAME_WIDTH,640)
@@ -34,7 +40,18 @@ class ThreadClass(QThread):
             fps = 1/(new_frame_time-prev_frame_time)
             prev_frame_time = new_frame_time
             if ret:
-                self.ImageUpdate.emit(flip_frame)
+                results = model(flip_frame, conf=0.7, verbose=False)
+                if len(results[0]) > 0:
+                    cv2.putText(flip_frame, "Fall detect!!!!", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
+                    # current_time = time.time()
+                    # if current_time - last_alert_time >= alert_interval:
+                    #     last_alert_time = current_time
+                    image_path = "detected_object.jpg"
+                    cv2.imwrite(image_path, flip_frame)
+                    # Save the frame as an image
+                    functions.sendMessage(image_path)
+                annotated_frame = results[0].plot()
+                self.ImageUpdate.emit(annotated_frame)
                 self.FPS.emit(fps)
     
     def stop(self):
@@ -52,10 +69,8 @@ class boardInfoClass(QThread):
         while self.ThreadActive:
             cpu = sysinfo.getCPU()
             ram = sysinfo.getRAM()
-            #temp = sysinfo.getTemp()
             self.cpu.emit(cpu)
             self.ram.emit(ram)
-            #self.temp.emit(temp)
 
     def stop(self):
         self.ThreadActive = False
@@ -97,14 +112,12 @@ class MainWindow(QMainWindow):
         self.resource_usage.start()
         self.resource_usage.cpu.connect(self.getCPU_usage)
         self.resource_usage.ram.connect(self.getRAM_usage)
-        #self.resource_usage.temp.connect(self.getTemp_usage)
 
         self.randomColor_usage = randomColorClass()
         self.randomColor_usage.start()
         self.randomColor_usage.color.connect(self.get_randomColors)
 
 # Create Instance class
-#         self.Win_showIO = Window_IOMonitor()
         self.Win_showError = Window_ErrorAlarm()
 
         # Track object Functions
@@ -210,24 +223,13 @@ class MainWindow(QMainWindow):
     @pyqtSlot(np.ndarray)
     def opencv_emit(self, Image):
 
-        #QPixmap format           
+        #QPixmap format
         original = self.cvt_cv_qt(Image)
         #Numpy Array format
         self.CopyImage =  Image[self.roi_y:self.roi_h,
                                 self.roi_x:self.roi_w]
-        
-        """
-        ในการที่จะทำ image ไปแสดงที่ Qlabel ต้องทำการ convert จาก np.array to QPixmap
-        Image ที่ได้มานั้นเป็น Numpy หากนำ Image ที่ได้ไปใข้กับฟังก์ชัน original = cvt_cv_qt(Image)
-        ตัวแปร original จะเป็นประเภท QtGui.QPixmap
-        """
-
         self.disp_main.setPixmap(original)
         self.disp_main.setScaledContents(True)
-
-
-
-
 
     def get_ROIX(self,x):
         self.roi_x = x

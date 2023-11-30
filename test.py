@@ -4,7 +4,6 @@ import torch
 
 import numpy as np
 import time
-from datetime import datetime
 from funtions import DetectFunction
 points = []
 last_alert_time = time.time()
