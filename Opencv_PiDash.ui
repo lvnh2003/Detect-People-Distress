@@ -210,6 +210,11 @@
       <height>131</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
     <property name="styleSheet">
      <string notr="true">background-color: rgb(246, 247, 247);</string>
     </property>
@@ -247,15 +252,23 @@
        </item>
        <item row="0" column="4">
         <widget class="QPushButton" name="btn_setObject1_2">
+         <property name="styleSheet">
+          <string notr="true">background-color: red;
+color: white</string>
+         </property>
          <property name="text">
-          <string>Delete</string>
+          <string>Delete </string>
          </property>
         </widget>
        </item>
        <item row="0" column="2">
         <widget class="QPushButton" name="btn_setObject1">
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(255, 170, 127);
+color: rgb(255, 255, 255)</string>
+         </property>
          <property name="text">
-          <string>Edit</string>
+          <string>Edit </string>
          </property>
         </widget>
        </item>
@@ -295,7 +308,7 @@
         <property name="geometry">
          <rect>
           <x>0</x>
-          <y>-20</y>
+          <y>0</y>
           <width>294</width>
           <height>522</height>
          </rect>
@@ -567,7 +580,7 @@
    <widget class="QLabel" name="Qlabel_yellowlight">
     <property name="geometry">
      <rect>
-      <x>140</x>
+      <x>150</x>
       <y>710</y>
       <width>60</width>
       <height>60</height>
@@ -593,7 +606,7 @@ border-radius:30px;
    <widget class="QLabel" name="Qlabel_redlight">
     <property name="geometry">
      <rect>
-      <x>240</x>
+      <x>260</x>
       <y>710</y>
       <width>60</width>
       <height>60</height>
@@ -939,13 +952,40 @@ border-radius:3px;</string>
     <property name="geometry">
      <rect>
       <x>400</x>
-      <y>620</y>
+      <y>630</y>
       <width>68</width>
       <height>22</height>
      </rect>
     </property>
     <property name="text">
      <string>Log</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btn_draw">
+    <property name="geometry">
+     <rect>
+      <x>810</x>
+      <y>630</y>
+      <width>191</width>
+      <height>29</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(0, 0, 255);
+border-radius:3px;
+color: rgb(255, 255, 255)</string>
+    </property>
+    <property name="text">
+     <string>Draw Detect Zone</string>
+    </property>
+    <property name="checkable">
+     <bool>false</bool>
+    </property>
+    <property name="default">
+     <bool>false</bool>
+    </property>
+    <property name="flat">
+     <bool>false</bool>
     </property>
    </widget>
   </widget>
