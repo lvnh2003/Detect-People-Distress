@@ -1,3 +1,4 @@
+import threading
 from hashlib import new
 from PyQt5 import uic
 from PyQt5.QtMultimedia import QCameraInfo
@@ -9,6 +10,7 @@ import numpy as np
 import random as rnd
 from Tracking_Func import Tack_Object
 from ultralytics import YOLO
+from playsound import playsound
 import torch
 from funtions import DetectFunction
 
@@ -17,14 +19,18 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = YOLO('./detect/train/weights/best.pt').float().to(device)
 last_alert_time = time.time()
 alert_interval = 15
+if torch.cuda.is_available():
+    print("run with GPU")
 class ThreadClass(QThread):
     ImageUpdate = pyqtSignal(np.ndarray)
     FPS = pyqtSignal(int)
     global camIndex
 
+    def play_sound(self):
+        playsound("temp_part.wav")
     def run(self):
         if camIndex == 0:
-            Capture = cv2.VideoCapture("7.mp4")
+            Capture = cv2.VideoCapture("5.mp4")
         if camIndex == 1:
             Capture = cv2.VideoCapture("5.mp4")
 
@@ -46,10 +52,12 @@ class ThreadClass(QThread):
                     # current_time = time.time()
                     # if current_time - last_alert_time >= alert_interval:
                     #     last_alert_time = current_time
-                    image_path = "detected_object.jpg"
-                    cv2.imwrite(image_path, flip_frame)
-                    # Save the frame as an image
-                    functions.sendMessage(image_path)
+                    # image_path = "detected_object.jpg"
+                    # cv2.imwrite(image_path, flip_frame)
+                    # # Save the frame as an image
+                    # functions.sendMessage(image_path)
+                    sound_thread = threading.Thread(target=self.play_sound)
+                    sound_thread.start()
                 annotated_frame = results[0].plot()
                 self.ImageUpdate.emit(annotated_frame)
                 self.FPS.emit(fps)
@@ -131,6 +139,7 @@ class MainWindow(QMainWindow):
         self.ready_lamp = QTimer(self, interval=1000)
         self.ready_lamp.timeout.connect(self.Ready_lamp)
         self.ready_lamp.start()
+
 
         self.lcd_timer = QTimer()
         self.lcd_timer.timeout.connect(self.clock)
@@ -214,8 +223,6 @@ class MainWindow(QMainWindow):
     def GetObject_one(self):
        print("xóa tàu")
 
-# ! Function oneclick to hsv parameter
-# ! Function oneclick to hsv parameter
     def set_roi(self):
         print("create time change")
     #     thêm thời gian mới cho tàu
@@ -288,6 +295,10 @@ class MainWindow(QMainWindow):
         if self.Status_lamp[0]: self.Qlabel_greenlight.setStyleSheet("background-color: rgb(85, 255, 0); border-radius:30px")
         else : self.Qlabel_greenlight.setStyleSheet("background-color: rgb(184, 230, 191); border-radius:30px")
         self.Status_lamp[0] = not self.Status_lamp[0]
+    # def Danger_lamp(self):
+    #     if self.Status_lamp[0]: self.Qlabel_redlight.setStyleSheet("background-color: rgb(255,77,77); border-radius:30px")
+    #     else : self.Qlabel_redlight.setStyleSheet("background-color: rgb(255,128,128); border-radius:30px")
+    #     self.Status_lamp[0] = not self.Status_lamp[0]
 
 
 
