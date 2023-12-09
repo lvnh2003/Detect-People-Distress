@@ -107,7 +107,7 @@
       <x>1030</x>
       <y>70</y>
       <width>261</width>
-      <height>611</height>
+      <height>651</height>
      </rect>
     </property>
     <property name="title">
@@ -308,7 +308,7 @@ color: rgb(255, 255, 255)</string>
         <property name="geometry">
          <rect>
           <x>0</x>
-          <y>0</y>
+          <y>-82</y>
           <width>294</width>
           <height>522</height>
          </rect>
@@ -549,6 +549,7 @@ color: rgb(255, 255, 255)</string>
      <font>
       <family>was@peenang</family>
       <pointsize>10</pointsize>
+      <weight>75</weight>
       <bold>true</bold>
      </font>
     </property>
@@ -828,6 +829,7 @@ border-radius:3px;</string>
         <font>
          <family>Droid Sans Fallback</family>
          <pointsize>10</pointsize>
+         <weight>75</weight>
          <bold>true</bold>
         </font>
        </property>
@@ -845,6 +847,7 @@ border-radius:3px;</string>
         <font>
          <family>Droid Sans Fallback</family>
          <pointsize>10</pointsize>
+         <weight>75</weight>
          <bold>true</bold>
         </font>
        </property>
@@ -862,6 +865,7 @@ border-radius:3px;</string>
         <font>
          <family>Droid Sans Fallback</family>
          <pointsize>10</pointsize>
+         <weight>75</weight>
          <bold>true</bold>
         </font>
        </property>
@@ -926,7 +930,7 @@ border-radius:3px;</string>
    <widget class="QPushButton" name="btn_close">
     <property name="geometry">
      <rect>
-      <x>1190</x>
+      <x>1200</x>
       <y>750</y>
       <width>85</width>
       <height>32</height>

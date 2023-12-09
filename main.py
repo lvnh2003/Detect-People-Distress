@@ -1,8 +1,8 @@
 import threading
 from hashlib import new
-from PyQt5 import uic
+from PyQt5 import uic, sip
 from PyQt5.QtMultimedia import QCameraInfo
-from PyQt5.QtWidgets import QApplication, QMainWindow, QDialog
+from PyQt5.QtWidgets import QApplication, QMainWindow, QDialog, QLabel, QVBoxLayout
 from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot, QTimer, QDateTime, Qt
 from PyQt5.QtGui import QImage, QPixmap, QPainter, QPen
 import cv2,time,sys,sysinfo
@@ -39,7 +39,7 @@ class ThreadClass(QThread):
         self.ThreadActive = True
         prev_frame_time = 0
         new_frame_time = 0
-        while self.ThreadActive: 
+        while self.ThreadActive:
             ret,frame_cap = Capture.read()
             flip_frame = cv2.flip(src=frame_cap,flipCode=1)
             new_frame_time = time.time()
@@ -61,17 +61,17 @@ class ThreadClass(QThread):
                 annotated_frame = results[0].plot()
                 self.ImageUpdate.emit(annotated_frame)
                 self.FPS.emit(fps)
-    
+
     def stop(self):
         self.ThreadActive = False
         self.quit()
-           
+
 # kiểm tra ram & cpu
 class boardInfoClass(QThread):
     cpu = pyqtSignal(float)
     ram = pyqtSignal(tuple)
     temp = pyqtSignal(float)
-    
+
     def run(self):
         self.ThreadActive = True
         while self.ThreadActive:
@@ -110,7 +110,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.ui = uic.loadUi("Opencv_PiDash.ui",self)
-        
+
         self.online_cam = QCameraInfo.availableCameras()
         self.camlist.addItems([c.description() for c in self.online_cam])
         self.btn_start.clicked.connect(self.StartWebCam)
@@ -143,19 +143,19 @@ class MainWindow(QMainWindow):
 
         self.lcd_timer = QTimer()
         self.lcd_timer.timeout.connect(self.clock)
-        self.lcd_timer.start() 
+        self.lcd_timer.start()
 
         self.flag_motor = True
         self.Status_lamp = [True,True,True]
-# End QTimer Zone  
+# End QTimer Zone
 
-        
+
         self.btn_setObject1.setCheckable(True)
         self.btn_setObject1.clicked.connect(self.GetObject_one)
 
         self.btn_setObject1_2.setCheckable(True)
         self.btn_setObject1.clicked.connect(self.GetObject_one)
-        
+
         self.btn_close.clicked.connect(self.Close_software)
 
         self.btn_roi_set.setCheckable(True)
@@ -174,6 +174,17 @@ class MainWindow(QMainWindow):
         self.Win_showError.btn_e_close.clicked.connect(self.Close_Error)
         self.btn_stop.setEnabled(False)
 
+        self.btn_draw.clicked.connect(self.showModal)
+    def showModal(self):
+        modal_dialog = QDialog(self)
+        modal_dialog.setWindowTitle('Modal Dialog')
+
+        disp_main_label = QLabel('This is a modal dialog.', modal_dialog)
+        layout = QVBoxLayout()
+        layout.addWidget(disp_main_label)
+        modal_dialog.setLayout(layout)
+
+        modal_dialog.exec_()
     def get_randomColors(self,color):
         self.RanColor1 = color[0]
         self.RanColor2 = color[1]
@@ -240,16 +251,16 @@ class MainWindow(QMainWindow):
 
     def get_ROIX(self,x):
         self.roi_x = x
-    
+
     def get_ROIY(self,y):
         self.roi_y = y
-    
+
     def get_ROIW(self,w):
         self.roi_w = w
-    
+
     def get_ROIH(self,h):
         self.roi_h = h
-   
+
     def cvt_cv_qt(self, Image):
         offset = 5
         rgb_img = cv2.cvtColor(src=Image,code=cv2.COLOR_BGR2RGB)
@@ -270,17 +281,17 @@ class MainWindow(QMainWindow):
 
             global camIndex
             camIndex = self.camlist.currentIndex()
-        
+
         # Opencv QThread
             self.Worker1_Opencv = ThreadClass()
             self.Worker1_Opencv.ImageUpdate.connect(self.opencv_emit)
             self.Worker1_Opencv.FPS.connect(self.get_FPS)
             self.Worker1_Opencv.start()
-        
+
 
         except Exception as error :
             pass
-    
+
     def StopWebcam(self,pin):
         self.textEdit.append(f"{self.DateTime.toString('d MMMM yy hh:mm:ss')}: Stop Webcam ({self.camlist.currentText()})")
         self.btn_start.setEnabled(True)
@@ -290,7 +301,7 @@ class MainWindow(QMainWindow):
     def Close_software(self):
         self.resource_usage.stop()
         sys.exit(app.exec_())
-    
+
     def Ready_lamp(self):
         if self.Status_lamp[0]: self.Qlabel_greenlight.setStyleSheet("background-color: rgb(85, 255, 0); border-radius:30px")
         else : self.Qlabel_greenlight.setStyleSheet("background-color: rgb(184, 230, 191); border-radius:30px")
