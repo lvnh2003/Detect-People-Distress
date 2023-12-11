@@ -1,6 +1,6 @@
 import threading
 from hashlib import new
-from PyQt5 import uic, sip
+from PyQt5 import uic
 from PyQt5.QtMultimedia import QCameraInfo
 from PyQt5.QtWidgets import QApplication, QMainWindow, QDialog, QLabel, QVBoxLayout
 from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot, QTimer, QDateTime, Qt
@@ -13,7 +13,7 @@ from ultralytics import YOLO
 from playsound import playsound
 import torch
 from funtions import DetectFunction
-
+from draw_detect import DrawDetect
 functions = DetectFunction()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = YOLO('./detect/train/weights/best.pt').float().to(device)
@@ -27,10 +27,10 @@ class ThreadClass(QThread):
     global camIndex
 
     def play_sound(self):
-        playsound("temp_part.wav")
+        playsound("warning.wav")
     def run(self):
         if camIndex == 0:
-            Capture = cv2.VideoCapture("5.mp4")
+            Capture = cv2.VideoCapture(0)
         if camIndex == 1:
             Capture = cv2.VideoCapture("5.mp4")
 
@@ -49,13 +49,6 @@ class ThreadClass(QThread):
                 results = model(flip_frame, conf=0.7, verbose=False)
                 if len(results[0]) > 0:
                     cv2.putText(flip_frame, "Fall detect!!!!", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
-                    # current_time = time.time()
-                    # if current_time - last_alert_time >= alert_interval:
-                    #     last_alert_time = current_time
-                    # image_path = "detected_object.jpg"
-                    # cv2.imwrite(image_path, flip_frame)
-                    # # Save the frame as an image
-                    # functions.sendMessage(image_path)
                     sound_thread = threading.Thread(target=self.play_sound)
                     sound_thread.start()
                 annotated_frame = results[0].plot()
@@ -100,11 +93,6 @@ class randomColorClass(QThread):
         self.ThreadActive = False
         self.quit()
 
-class Window_ErrorAlarm(QDialog):
-    def __init__(self):
-        super().__init__()
-        self.ui = uic.loadUi("Error.ui", self)
-
 #   QLabel display
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -126,7 +114,6 @@ class MainWindow(QMainWindow):
         self.randomColor_usage.color.connect(self.get_randomColors)
 
 # Create Instance class
-        self.Win_showError = Window_ErrorAlarm()
 
         # Track object Functions
         self.Track_Function1 = Tack_Object()
@@ -170,21 +157,13 @@ class MainWindow(QMainWindow):
         self.roi_y = 20
         self.roi_w = 2000
         self.roi_h = 2000
-
-        self.Win_showError.btn_e_close.clicked.connect(self.Close_Error)
         self.btn_stop.setEnabled(False)
 
         self.btn_draw.clicked.connect(self.showModal)
     def showModal(self):
-        modal_dialog = QDialog(self)
-        modal_dialog.setWindowTitle('Modal Dialog')
+        self.draw = DrawDetect()
+        self.draw.show()
 
-        disp_main_label = QLabel('This is a modal dialog.', modal_dialog)
-        layout = QVBoxLayout()
-        layout.addWidget(disp_main_label)
-        modal_dialog.setLayout(layout)
-
-        modal_dialog.exec_()
     def get_randomColors(self,color):
         self.RanColor1 = color[0]
         self.RanColor2 = color[1]
