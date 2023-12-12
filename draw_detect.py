@@ -16,7 +16,7 @@ class DrawDetect(QtWidgets.QMainWindow):
         self.timer.timeout.connect(self.update_frame)
         self.timer.start(30)  # Thời gian cập nhật khung hình (30ms)
 
-        # Mở video bằng OpenCV
+        # Mở video bằng OpenCV tỉ lê 1.6
         self.video_path = "5.mp4"
         self.video_capture = cv2.VideoCapture(self.video_path)
 
@@ -31,10 +31,23 @@ class DrawDetect(QtWidgets.QMainWindow):
 
     def handle_left_click(self, event):
         if event.button() == QtCore.Qt.LeftButton:
+            label_width = self.display_screen.width()
+            label_height = self.display_screen.height()
+            frame_width = self.video_capture.get(cv2.CAP_PROP_FRAME_WIDTH)
+            frame_height = self.video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
+
             x = event.pos().x()
             y = event.pos().y()
-            self.points.append([x, y])
-            print(f"Added point: ({x}, {y})")
+
+            # Calculate scaling factors
+            scale_x = frame_width / label_width
+            scale_y = frame_height / label_height
+
+            # Apply scaling and transform coordinates
+            frame_x = int(x * scale_x)
+            frame_y = int(y * scale_y)
+
+            self.points.append([frame_x, frame_y])
 
     def update_frame(self):
         # Đọc khung hình tiếp theo từ video

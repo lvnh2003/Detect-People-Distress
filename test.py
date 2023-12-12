@@ -22,7 +22,7 @@ if torch.cuda.is_available():
     print("run with GPU")
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Load the YOLOv8 model
-model = YOLO('/home/lvnh/PycharmProjects/Detect-People-Distress/detect/train/weights/best.pt').float().to(device)
+model = YOLO('./detect/train/weights/best.pt').float().to(device)
 functions = DetectFunction()
 # Open the video file
 video_path = "7.mp4"
@@ -40,13 +40,6 @@ while cap.isOpened():
 
         if len(results[0]) > 0:
             cv2.putText(frame,"Fall detect!!!!", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
-            current_time = time.time()
-            if current_time - last_alert_time >= alert_interval:
-                last_alert_time = current_time
-                image_path = "detected_object.jpg"
-                cv2.imwrite(image_path, frame)
-                # Save the frame as an image
-                functions.sendMessage(image_path)
 
 
         # Convert the annotated frame back to numpy array and move it to CPU for display

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1334</width>
-    <height>856</height>
+    <width>1103</width>
+    <height>867</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,11 +17,17 @@
    <widget class="QFrame" name="frame">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>50</y>
+      <x>-140</x>
+      <y>10</y>
       <width>1301</width>
-      <height>741</height>
+      <height>1000</height>
      </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>0</width>
+      <height>0</height>
+     </size>
     </property>
     <property name="frameShape">
      <enum>QFrame::StyledPanel</enum>
@@ -32,11 +38,23 @@
     <widget class="QLabel" name="display_screen">
      <property name="geometry">
       <rect>
-       <x>0</x>
+       <x>190</x>
        <y>0</y>
-       <width>1301</width>
-       <height>741</height>
+       <width>992</width>
+       <height>768</height>
       </rect>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>992</width>
+       <height>768</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>992</width>
+       <height>768</height>
+      </size>
      </property>
      <property name="text">
       <string>Main Content</string>
@@ -45,45 +63,32 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-   </widget>
-   <widget class="QPushButton" name="pushButton">
-    <property name="geometry">
-     <rect>
-      <x>400</x>
-      <y>800</y>
-      <width>141</width>
-      <height>28</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Add new polygon</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="done">
-    <property name="geometry">
-     <rect>
-      <x>800</x>
-      <y>800</y>
-      <width>93</width>
-      <height>28</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Done</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_2">
-    <property name="geometry">
-     <rect>
-      <x>590</x>
-      <y>10</y>
-      <width>141</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>EDIT DETECT ZONE</string>
-    </property>
+    <widget class="QPushButton" name="pushButton">
+     <property name="geometry">
+      <rect>
+       <x>410</x>
+       <y>780</y>
+       <width>141</width>
+       <height>28</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Add new polygon</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="done">
+     <property name="geometry">
+      <rect>
+       <x>790</x>
+       <y>780</y>
+       <width>93</width>
+       <height>28</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Done</string>
+     </property>
+    </widget>
    </widget>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
