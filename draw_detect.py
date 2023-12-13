@@ -4,12 +4,12 @@ import numpy as np
 
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QImage, QPixmap
-
+from NotifyMessage import NotifyMessage
 class DrawDetect(QtWidgets.QMainWindow):
-    def __init__(self):
+    def __init__(self,video):
         super(DrawDetect, self).__init__()
         uic.loadUi("draw.ui", self)
-        self.pushButton.clicked.connect(self.draw_polygon)
+        self.pushButton.clicked.connect(self.addNewPolygon)
         self.done.clicked.connect(self.drawed)
         # Tạo QTimer để liên tục cập nhật khung hình từ video
         self.timer = QTimer(self)
@@ -17,7 +17,7 @@ class DrawDetect(QtWidgets.QMainWindow):
         self.timer.start(30)  # Thời gian cập nhật khung hình (30ms)
 
         # Mở video bằng OpenCV tỉ lê 1.6
-        self.video_path = "5.mp4"
+        self.video_path = video
         self.video_capture = cv2.VideoCapture(self.video_path)
 
         # Hiển thị video lên QLabel
@@ -55,10 +55,11 @@ class DrawDetect(QtWidgets.QMainWindow):
 
         if ret:
             # Vẽ đa giác trên khung hình
-            frame = self.draw_polygon(frame, self.points)
+            flip_frame = cv2.flip(src=frame,flipCode=1)
+            flip_frame = self.draw_polygon(flip_frame, self.points)
 
             # Chuyển đổi khung hình từ cv2 sang QImage
-            qt_image = self.convert_cv2_to_qt(frame)
+            qt_image = self.convert_cv2_to_qt(flip_frame)
 
             # Hiển thị khung hình trên QLabel
             self.display_screen.setPixmap(QPixmap.fromImage(qt_image))
@@ -77,5 +78,15 @@ class DrawDetect(QtWidgets.QMainWindow):
         bytes_per_line = ch * w
         qt_image = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format_RGB888)
         return qt_image
+    def addNewPolygon(self):
+        self.points.clear()
     def drawed(self):
-        self.hide()
+        self.points.append(self.points[0])
+        with open("points.txt", "w") as file:
+            # Iterate over the points list
+            for point in self.points:
+                # Convert the point coordinates to a string
+                point_str = f"{point[0]}, {point[1]}"
+                # Write the point string to a new line in the file
+                file.write(point_str + "\n")
+        NotifyMessage("Created new points success")

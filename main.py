@@ -1,10 +1,9 @@
 import threading
-from hashlib import new
 from PyQt5 import uic
 from PyQt5.QtMultimedia import QCameraInfo
-from PyQt5.QtWidgets import QApplication, QMainWindow, QDialog, QLabel, QVBoxLayout
-from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot, QTimer, QDateTime, Qt
-from PyQt5.QtGui import QImage, QPixmap, QPainter, QPen
+from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot, QTimer, QDateTime
+from PyQt5.QtGui import QImage, QPixmap
 import cv2,time,sys,sysinfo
 import numpy as np
 import random as rnd
@@ -14,13 +13,20 @@ from playsound import playsound
 import torch
 from funtions import DetectFunction
 from draw_detect import DrawDetect
+from NotifyMessage import NotifyMessage
 functions = DetectFunction()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = YOLO('./detect/train/weights/best.pt').float().to(device)
-last_alert_time = time.time()
-alert_interval = 15
 if torch.cuda.is_available():
     print("run with GPU")
+def getPoint():
+    points = []
+    with open('points.txt', 'r') as file:
+        for line in file:
+            x, y = map(int, line.strip().split(','))
+            points.append([x, y])
+    return np.array(points)
+points = getPoint()
 class ThreadClass(QThread):
     ImageUpdate = pyqtSignal(np.ndarray)
     FPS = pyqtSignal(int)
@@ -30,7 +36,7 @@ class ThreadClass(QThread):
         playsound("warning.wav")
     def run(self):
         if camIndex == 0:
-            Capture = cv2.VideoCapture(0)
+            Capture = cv2.VideoCapture("7.mp4")
         if camIndex == 1:
             Capture = cv2.VideoCapture("5.mp4")
 
@@ -45,6 +51,7 @@ class ThreadClass(QThread):
             new_frame_time = time.time()
             fps = 1/(new_frame_time-prev_frame_time)
             prev_frame_time = new_frame_time
+            self.draw_polygon(flip_frame, points)
             if ret:
                 results = model(flip_frame, conf=0.7, verbose=False)
                 if len(results[0]) > 0:
@@ -59,6 +66,10 @@ class ThreadClass(QThread):
         self.ThreadActive = False
         self.quit()
 
+    @classmethod
+    def draw_polygon(cls, image, points):
+        if len(points) > 1:
+            cv2.polylines(image, [np.array(points)], isClosed=False, color=(0, 0, 255), thickness=2)
 # kiểm tra ram & cpu
 class boardInfoClass(QThread):
     cpu = pyqtSignal(float)
@@ -99,8 +110,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.ui = uic.loadUi("Opencv_PiDash.ui",self)
 
-        self.online_cam = QCameraInfo.availableCameras()
-        self.camlist.addItems([c.description() for c in self.online_cam])
+        self.camlist.addItems(["CAMERA1","CAMERA2"])
         self.btn_start.clicked.connect(self.StartWebCam)
         self.btn_stop.clicked.connect(self.StopWebcam)
 
@@ -152,17 +162,23 @@ class MainWindow(QMainWindow):
         self.ROI_Y.valueChanged.connect(self.get_ROIY)
         self.ROI_W.valueChanged.connect(self.get_ROIW)
         self.ROI_H.valueChanged.connect(self.get_ROIH)
-
-        self.roi_x = 20
-        self.roi_y = 20
-        self.roi_w = 2000
-        self.roi_h = 2000
         self.btn_stop.setEnabled(False)
 
         self.btn_draw.clicked.connect(self.showModal)
+
+
     def showModal(self):
-        self.draw = DrawDetect()
-        self.draw.show()
+        global camIndex
+        try:
+            if camIndex == 0:
+                video = "7.mp4"
+            if camIndex == 1:
+                video = "5.mp4"
+            self.draw = DrawDetect(video)
+            self.draw.show()
+        except Exception as e:
+            NotifyMessage("Choose camera first!!!")
+
 
     def get_randomColors(self,color):
         self.RanColor1 = color[0]
@@ -222,9 +238,7 @@ class MainWindow(QMainWindow):
 
         #QPixmap format
         original = self.cvt_cv_qt(Image)
-        #Numpy Array format
-        self.CopyImage =  Image[self.roi_y:self.roi_h,
-                                self.roi_x:self.roi_w]
+
         self.disp_main.setPixmap(original)
         self.disp_main.setScaledContents(True)
 
@@ -239,7 +253,6 @@ class MainWindow(QMainWindow):
 
     def get_ROIH(self,h):
         self.roi_h = h
-
     def cvt_cv_qt(self, Image):
         offset = 5
         rgb_img = cv2.cvtColor(src=Image,code=cv2.COLOR_BGR2RGB)
