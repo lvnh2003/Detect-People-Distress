@@ -6,8 +6,8 @@ from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QImage, QPixmap
 from NotifyMessage import NotifyMessage
 class DrawDetect(QtWidgets.QMainWindow):
-    def __init__(self,video):
-        super(DrawDetect, self).__init__()
+    def __init__(self,video,parent):
+        super(DrawDetect, self).__init__(parent)
         uic.loadUi("draw.ui", self)
         self.pushButton.clicked.connect(self.addNewPolygon)
         self.done.clicked.connect(self.drawed)
@@ -55,11 +55,10 @@ class DrawDetect(QtWidgets.QMainWindow):
 
         if ret:
             # Vẽ đa giác trên khung hình
-            flip_frame = cv2.flip(src=frame,flipCode=1)
-            flip_frame = self.draw_polygon(flip_frame, self.points)
+            frame = self.draw_polygon(frame, self.points)
 
             # Chuyển đổi khung hình từ cv2 sang QImage
-            qt_image = self.convert_cv2_to_qt(flip_frame)
+            qt_image = self.convert_cv2_to_qt(frame)
 
             # Hiển thị khung hình trên QLabel
             self.display_screen.setPixmap(QPixmap.fromImage(qt_image))
@@ -90,3 +89,4 @@ class DrawDetect(QtWidgets.QMainWindow):
                 # Write the point string to a new line in the file
                 file.write(point_str + "\n")
         NotifyMessage("Created new points success")
+        self.parent().newPoint()

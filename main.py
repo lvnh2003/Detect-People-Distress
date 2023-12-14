@@ -7,6 +7,7 @@ from PyQt5.QtGui import QImage, QPixmap
 import cv2,time,sys,sysinfo
 import numpy as np
 import random as rnd
+from shapely.geometry import Point, Polygon
 from Tracking_Func import Tack_Object
 from ultralytics import YOLO
 from playsound import playsound
@@ -47,17 +48,19 @@ class ThreadClass(QThread):
         new_frame_time = 0
         while self.ThreadActive:
             ret,frame_cap = Capture.read()
-            flip_frame = cv2.flip(src=frame_cap,flipCode=1)
+
             new_frame_time = time.time()
             fps = 1/(new_frame_time-prev_frame_time)
             prev_frame_time = new_frame_time
-            self.draw_polygon(flip_frame, points)
+            self.draw_polygon(frame_cap, points)
             if ret:
-                results = model(flip_frame, conf=0.7, verbose=False)
+                results = model(frame_cap, conf=0.7, verbose=False)
                 if len(results[0]) > 0:
-                    cv2.putText(flip_frame, "Fall detect!!!!", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
-                    sound_thread = threading.Thread(target=self.play_sound)
-                    sound_thread.start()
+                    box = results[0].boxes.xyxy[0]
+                    if self.draw_prediction(box):
+                        cv2.putText(frame_cap, "Fall detect!!!!", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
+                        sound_thread = threading.Thread(target=self.play_sound)
+                        sound_thread.start()
                 annotated_frame = results[0].plot()
                 self.ImageUpdate.emit(annotated_frame)
                 self.FPS.emit(fps)
@@ -66,10 +69,19 @@ class ThreadClass(QThread):
         self.ThreadActive = False
         self.quit()
 
-    @classmethod
-    def draw_polygon(cls, image, points):
+    def draw_polygon(self, image, points):
         if len(points) > 1:
             cv2.polylines(image, [np.array(points)], isClosed=False, color=(0, 0, 255), thickness=2)
+    def draw_prediction(self, box):
+        x_min, y_min, x_max, y_max = box.tolist()
+        centroid = ((x_min + x_max) // 2, (y_min + y_max) // 2)
+        return self.isInside(centroid)
+
+    def isInside(self, centroid):
+        polygon = Polygon(points)
+        centroid = Point(centroid)
+        print(polygon.contains(centroid))
+        return polygon.contains(centroid)
 # kiểm tra ram & cpu
 class boardInfoClass(QThread):
     cpu = pyqtSignal(float)
@@ -174,7 +186,7 @@ class MainWindow(QMainWindow):
                 video = "7.mp4"
             if camIndex == 1:
                 video = "5.mp4"
-            self.draw = DrawDetect(video)
+            self.draw = DrawDetect(video,self)
             self.draw.show()
         except Exception as e:
             NotifyMessage("Choose camera first!!!")
@@ -302,7 +314,14 @@ class MainWindow(QMainWindow):
     #     if self.Status_lamp[0]: self.Qlabel_redlight.setStyleSheet("background-color: rgb(255,77,77); border-radius:30px")
     #     else : self.Qlabel_redlight.setStyleSheet("background-color: rgb(255,128,128); border-radius:30px")
     #     self.Status_lamp[0] = not self.Status_lamp[0]
-
+    def newPoint(self):
+        global points
+        pointsNew = []
+        with open('points.txt', 'r') as file:
+            for line in file:
+                x, y = map(int, line.strip().split(','))
+                pointsNew.append([x, y])
+        points = pointsNew
 
 
 if __name__ == "__main__":
