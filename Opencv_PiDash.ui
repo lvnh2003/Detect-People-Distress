@@ -61,10 +61,10 @@
    <widget class="QGroupBox" name="groupBox">
     <property name="geometry">
      <rect>
-      <x>390</x>
-      <y>70</y>
-      <width>621</width>
-      <height>551</height>
+      <x>360</x>
+      <y>60</y>
+      <width>661</width>
+      <height>591</height>
      </rect>
     </property>
     <property name="title">
@@ -207,95 +207,13 @@
      </item>
     </layout>
    </widget>
-   <widget class="QGroupBox" name="groupBox_4">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>560</y>
-      <width>341</width>
-      <height>131</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>12</pointsize>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color: rgb(246, 247, 247);</string>
-    </property>
-    <property name="title">
-     <string>List of train running times management</string>
-    </property>
-    <layout class="QGridLayout" name="gridLayout_4">
-     <item row="0" column="0">
-      <layout class="QGridLayout" name="gridLayout_5">
-       <item row="0" column="3">
-        <spacer name="horizontalSpacer">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item row="0" column="1">
-        <spacer name="horizontalSpacer_3">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item row="0" column="4">
-        <widget class="QPushButton" name="btn_setObject1_2">
-         <property name="styleSheet">
-          <string notr="true">background-color: red;
-color: white</string>
-         </property>
-         <property name="text">
-          <string>Delete </string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="2">
-        <widget class="QPushButton" name="btn_setObject1">
-         <property name="styleSheet">
-          <string notr="true">background-color: rgb(255, 170, 127);
-color: rgb(255, 255, 255)</string>
-         </property>
-         <property name="text">
-          <string>Edit </string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_30">
-         <property name="text">
-          <string>Train 1</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-    </layout>
-   </widget>
    <widget class="QGroupBox" name="groupBox_3">
     <property name="geometry">
      <rect>
       <x>10</x>
       <y>60</y>
       <width>341</width>
-      <height>481</height>
+      <height>621</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -315,8 +233,8 @@ color: rgb(255, 255, 255)</string>
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>294</width>
-          <height>522</height>
+          <width>315</width>
+          <height>580</height>
          </rect>
         </property>
         <layout class="QGridLayout" name="gridLayout_7">
@@ -386,15 +304,15 @@ color: rgb(255, 255, 255)</string>
              <item row="0" column="0">
               <layout class="QGridLayout" name="gridLayout_9">
                <item row="3" column="1">
-                <widget class="QSpinBox" name="ROI_W">
+                <widget class="QSpinBox" name="end_H">
                  <property name="maximum">
-                  <number>24</number>
+                  <number>23</number>
                  </property>
                  <property name="singleStep">
-                  <number>1</number>
+                  <number>0</number>
                  </property>
                  <property name="value">
-                  <number>24</number>
+                  <number>23</number>
                  </property>
                 </widget>
                </item>
@@ -412,12 +330,15 @@ color: rgb(255, 255, 255)</string>
                 </widget>
                </item>
                <item row="1" column="1">
-                <widget class="QSpinBox" name="ROI_X">
+                <widget class="QSpinBox" name="start_H">
                  <property name="minimum">
                   <number>0</number>
                  </property>
                  <property name="maximum">
-                  <number>24</number>
+                  <number>23</number>
+                 </property>
+                 <property name="singleStep">
+                  <number>0</number>
                  </property>
                  <property name="value">
                   <number>20</number>
@@ -432,12 +353,12 @@ color: rgb(255, 255, 255)</string>
                 </widget>
                </item>
                <item row="1" column="3">
-                <widget class="QSpinBox" name="ROI_Y">
+                <widget class="QSpinBox" name="start_M">
                  <property name="minimum">
                   <number>0</number>
                  </property>
                  <property name="maximum">
-                  <number>60</number>
+                  <number>59</number>
                  </property>
                  <property name="value">
                   <number>20</number>
@@ -452,12 +373,12 @@ color: rgb(255, 255, 255)</string>
                 </widget>
                </item>
                <item row="3" column="3">
-                <widget class="QSpinBox" name="ROI_H">
+                <widget class="QSpinBox" name="end_M">
                  <property name="maximum">
-                  <number>60</number>
+                  <number>59</number>
                  </property>
                  <property name="value">
-                  <number>60</number>
+                  <number>59</number>
                  </property>
                 </widget>
                </item>
@@ -482,7 +403,7 @@ color: rgb(255, 255, 255)</string>
                 </widget>
                </item>
                <item row="4" column="1">
-                <widget class="QTextEdit" name="textEdit_2">
+                <widget class="QTextEdit" name="name_Train">
                  <property name="maximumSize">
                   <size>
                    <width>93</width>
@@ -511,26 +432,15 @@ color: rgb(255, 255, 255)</string>
            <widget class="QWidget" name="gridLayoutWidget">
             <property name="geometry">
              <rect>
-              <x>20</x>
+              <x>10</x>
               <y>220</y>
-              <width>251</width>
+              <width>281</width>
               <height>251</height>
              </rect>
             </property>
             <layout class="QGridLayout" name="gridLayout_15">
-             <item row="0" column="1">
-              <widget class="QTableWidget" name="tableWidget">
-               <column>
-                <property name="text">
-                 <string>Name</string>
-                </property>
-               </column>
-               <column>
-                <property name="text">
-                 <string>Amount of time</string>
-                </property>
-               </column>
-              </widget>
+             <item row="0" column="0" colspan="2">
+              <widget class="QTableWidget" name="table"/>
              </item>
             </layout>
            </widget>
@@ -797,7 +707,7 @@ border-radius:30px;
     <property name="geometry">
      <rect>
       <x>390</x>
-      <y>670</y>
+      <y>680</y>
       <width>631</width>
       <height>111</height>
      </rect>
@@ -961,8 +871,8 @@ border-radius:3px;</string>
    <widget class="QLabel" name="label_18">
     <property name="geometry">
      <rect>
-      <x>400</x>
-      <y>630</y>
+      <x>390</x>
+      <y>650</y>
       <width>68</width>
       <height>22</height>
      </rect>

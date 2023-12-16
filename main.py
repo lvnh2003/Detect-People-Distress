@@ -1,7 +1,7 @@
 import threading
 from PyQt5 import uic
 from PyQt5.QtMultimedia import QCameraInfo
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QAbstractItemView
 from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot, QTimer, QDateTime
 from PyQt5.QtGui import QImage, QPixmap
 import cv2,time,sys,sysinfo
@@ -12,9 +12,13 @@ from Tracking_Func import Tack_Object
 from ultralytics import YOLO
 from playsound import playsound
 import torch
+from datetime import time as timeDB
 from funtions import DetectFunction
 from draw_detect import DrawDetect
 from NotifyMessage import NotifyMessage
+from Model.Train import Train
+from database import insert,listTrain
+from CRUD.update import UpdateForm
 functions = DetectFunction()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = YOLO('./detect/train/weights/best.pt').float().to(device)
@@ -28,6 +32,8 @@ def getPoint():
             points.append([x, y])
     return np.array(points)
 points = getPoint()
+
+
 class ThreadClass(QThread):
     ImageUpdate = pyqtSignal(np.ndarray)
     FPS = pyqtSignal(int)
@@ -158,26 +164,14 @@ class MainWindow(QMainWindow):
         self.Status_lamp = [True,True,True]
 # End QTimer Zone
 
-
-        self.btn_setObject1.setCheckable(True)
-        self.btn_setObject1.clicked.connect(self.GetObject_one)
-
-        self.btn_setObject1_2.setCheckable(True)
-        self.btn_setObject1.clicked.connect(self.GetObject_one)
-
         self.btn_close.clicked.connect(self.Close_software)
 
         self.btn_roi_set.setCheckable(True)
-        self.btn_roi_set.clicked.connect(self.set_roi)
-
-        self.ROI_X.valueChanged.connect(self.get_ROIX)
-        self.ROI_Y.valueChanged.connect(self.get_ROIY)
-        self.ROI_W.valueChanged.connect(self.get_ROIW)
-        self.ROI_H.valueChanged.connect(self.get_ROIH)
+        self.btn_roi_set.clicked.connect(self.addTrain)
         self.btn_stop.setEnabled(False)
 
         self.btn_draw.clicked.connect(self.showModal)
-
+        self.listDataToTable()
 
     def showModal(self):
         global camIndex
@@ -196,6 +190,7 @@ class MainWindow(QMainWindow):
         self.RanColor1 = color[0]
         self.RanColor2 = color[1]
         self.RanColor3 = color[2]
+
 
     def getCPU_usage(self,cpu):
         self.Qlabel_cpu.setText(str(cpu) + " %")
@@ -232,18 +227,56 @@ class MainWindow(QMainWindow):
         self.DateTime = QDateTime.currentDateTime()
         self.lcd_clock.display(self.DateTime.toString('hh:mm:ss'))
 
+    def addTrain(self):
+        start_H = self.start_H.value()
+        start_M = self.start_M.value()
+        end_H = self.end_H.value()
+        end_M = self.end_M.value()
+        name = self.name_Train.toPlainText()
+        if name:
+            train = Train(name,timeDB(start_H,start_M),timeDB(end_H,end_M))
+            insert(train)
+            NotifyMessage("Add new time success!!")
+            self.listDataToTable()
+        else:
+            NotifyMessage("Please enter the name!!")
+    def listDataToTable(self):
+        trains = listTrain()
+        self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.table.itemSelectionChanged.connect(self.data_action)
+        self.table.setRowCount(len(trains))
+        self.table.setColumnCount(3)  # Set to 2 because we will merge two columns into one
+        self.table.setColumnHidden(0, True)
+        # Combine two columns into one and populate the table with data
+        for row_index, row_data in enumerate(trains):
+            item_id = QTableWidgetItem(str(row_data[0]))
+            self.table.setItem(row_index, 0, item_id)
+            combined_data = f"{row_data[2]} - {row_data[3]}"  # Combine "start" and "end"
+            item = QTableWidgetItem(combined_data)
+            self.table.setItem(row_index, 1, item)
+            item_name_train = QTableWidgetItem(row_data[1])
+            self.table.setItem(row_index, 2, item_name_train)
 
-# Close Error Notification window
-    def Close_Error(self):
-        self.Win_error.close()
+        # Set header labels for the new columns
+        header_labels = ["ID","Time", "Name Train"]
+        self.table.setHorizontalHeaderLabels(header_labels)
 
-# ! Function oneclick to hsv parameter
-    def GetObject_one(self):
-       print("xóa tàu")
+    def data_action(self):
 
-    def set_roi(self):
-        print("create time change")
-    #     thêm thời gian mới cho tàu
+        selected_items = self.table.selectedItems()
+        if selected_items:
+            selected_row = selected_items[0].row()
+
+            # Get the ID value from the hidden column
+            id_item = self.table.item(selected_row, 0)  # Assuming ID is in column 0
+            if id_item:
+                train_id = int(id_item.text())
+                if hasattr(self, 'update_form'):
+                    self.update_form.close()
+                    self.update_form.deleteLater()
+                update_form = UpdateForm(train_id,self)
+                update_form.show()
+
 
     @pyqtSlot(np.ndarray)
     def opencv_emit(self, Image):
@@ -253,18 +286,6 @@ class MainWindow(QMainWindow):
 
         self.disp_main.setPixmap(original)
         self.disp_main.setScaledContents(True)
-
-    def get_ROIX(self,x):
-        self.roi_x = x
-
-    def get_ROIY(self,y):
-        self.roi_y = y
-
-    def get_ROIW(self,w):
-        self.roi_w = w
-
-    def get_ROIH(self,h):
-        self.roi_h = h
     def cvt_cv_qt(self, Image):
         offset = 5
         rgb_img = cv2.cvtColor(src=Image,code=cv2.COLOR_BGR2RGB)
@@ -276,7 +297,6 @@ class MainWindow(QMainWindow):
 
         return pixmap #QPixmap.fromImage(cvt2QtFormat)
 #----------------------------------------------------------------------------------------------------
-
     def StartWebCam(self,pin):
         try:
             self.textEdit.append(f"{self.DateTime.toString('d MMMM yy hh:mm:ss')}: Start Webcam ({self.camlist.currentText()})")
@@ -304,16 +324,12 @@ class MainWindow(QMainWindow):
 
     def Close_software(self):
         self.resource_usage.stop()
-        sys.exit(app.exec_())
+        sys.exit()
 
     def Ready_lamp(self):
         if self.Status_lamp[0]: self.Qlabel_greenlight.setStyleSheet("background-color: rgb(85, 255, 0); border-radius:30px")
         else : self.Qlabel_greenlight.setStyleSheet("background-color: rgb(184, 230, 191); border-radius:30px")
         self.Status_lamp[0] = not self.Status_lamp[0]
-    # def Danger_lamp(self):
-    #     if self.Status_lamp[0]: self.Qlabel_redlight.setStyleSheet("background-color: rgb(255,77,77); border-radius:30px")
-    #     else : self.Qlabel_redlight.setStyleSheet("background-color: rgb(255,128,128); border-radius:30px")
-    #     self.Status_lamp[0] = not self.Status_lamp[0]
     def newPoint(self):
         global points
         pointsNew = []

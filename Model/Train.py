@@ -1,8 +1,8 @@
 class Train:
-    def __int__(self,name, start,end):
+    def __init__(self, name, start, end):
         self.name = name
         self.start = start
         self.end = end
-    def getAll(self):
-        print("getAll")
+    def __repr__(self):
+        return "Time: {} ~ {}".format(self.start ,self.end)
 

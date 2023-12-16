@@ -1,3 +1,5 @@
+import sys
+
 import cv2
 from PyQt5 import QtWidgets, uic, QtCore
 import numpy as np
