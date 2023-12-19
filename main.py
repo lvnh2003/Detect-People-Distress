@@ -1,7 +1,7 @@
 import threading
 from PyQt5 import uic
 from PyQt5.QtMultimedia import QCameraInfo
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QAbstractItemView
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QAbstractItemView, QHeaderView
 from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot, QTimer, QDateTime
 from PyQt5.QtGui import QImage, QPixmap
 import cv2,time,sys,sysinfo
@@ -86,7 +86,6 @@ class ThreadClass(QThread):
     def isInside(self, centroid):
         polygon = Polygon(points)
         centroid = Point(centroid)
-        print(polygon.contains(centroid))
         return polygon.contains(centroid)
 # kiểm tra ram & cpu
 class boardInfoClass(QThread):
@@ -130,6 +129,7 @@ class MainWindow(QMainWindow):
 
         self.camlist.addItems(["CAMERA1","CAMERA2"])
         self.btn_start.clicked.connect(self.StartWebCam)
+        self.btn_start.setStyleSheet("background-color: red; color: white;")
         self.btn_stop.clicked.connect(self.StopWebcam)
 
         self.resource_usage = boardInfoClass()
@@ -166,13 +166,14 @@ class MainWindow(QMainWindow):
 
         self.btn_close.clicked.connect(self.Close_software)
 
-        self.btn_roi_set.setCheckable(True)
         self.btn_roi_set.clicked.connect(self.addTrain)
         self.btn_stop.setEnabled(False)
 
         self.btn_draw.clicked.connect(self.showModal)
         self.listDataToTable()
-
+        self.update_form = UpdateForm(self)
+        self.add_camera.setFixedSize(23,23)
+        self.add_camera.setStyleSheet("background-color: #FFCC33; color : white")
     def showModal(self):
         global camIndex
         try:
@@ -183,7 +184,7 @@ class MainWindow(QMainWindow):
             self.draw = DrawDetect(video,self)
             self.draw.show()
         except Exception as e:
-            NotifyMessage("Choose camera first!!!")
+            NotifyMessage("Choose camera first!!!",0)
 
 
     def get_randomColors(self,color):
@@ -236,10 +237,10 @@ class MainWindow(QMainWindow):
         if name:
             train = Train(name,timeDB(start_H,start_M),timeDB(end_H,end_M))
             insert(train)
-            NotifyMessage("Add new time success!!")
+            NotifyMessage("Add a new timeline of success")
             self.listDataToTable()
         else:
-            NotifyMessage("Please enter the name!!")
+            NotifyMessage("Please enter the name!!",0)
     def listDataToTable(self):
         trains = listTrain()
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -260,6 +261,10 @@ class MainWindow(QMainWindow):
         # Set header labels for the new columns
         header_labels = ["ID","Time", "Name Train"]
         self.table.setHorizontalHeaderLabels(header_labels)
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
+        self.table.setStyleSheet("QTableWidget { background-color: white; }")
+        self.table.horizontalHeader().setStyleSheet("QHeaderView::section { background-color: lightgray; }")
 
     def data_action(self):
 
@@ -271,12 +276,10 @@ class MainWindow(QMainWindow):
             id_item = self.table.item(selected_row, 0)  # Assuming ID is in column 0
             if id_item:
                 train_id = int(id_item.text())
-                if hasattr(self, 'update_form'):
-                    self.update_form.close()
-                    self.update_form.deleteLater()
-                update_form = UpdateForm(train_id,self)
-                update_form.show()
+                self.update_form.update_data(train_id)
 
+                # Show the UpdateForm
+                self.update_form.show()
 
     @pyqtSlot(np.ndarray)
     def opencv_emit(self, Image):
@@ -301,7 +304,9 @@ class MainWindow(QMainWindow):
         try:
             self.textEdit.append(f"{self.DateTime.toString('d MMMM yy hh:mm:ss')}: Start Webcam ({self.camlist.currentText()})")
             self.btn_stop.setEnabled(True)
+            self.btn_stop.setStyleSheet("background-color: red; color: white;")
             self.btn_start.setEnabled(False)
+            self.btn_start.setStyleSheet("color: grey; background-color: white")
 
             global camIndex
             camIndex = self.camlist.currentIndex()
@@ -319,7 +324,9 @@ class MainWindow(QMainWindow):
     def StopWebcam(self,pin):
         self.textEdit.append(f"{self.DateTime.toString('d MMMM yy hh:mm:ss')}: Stop Webcam ({self.camlist.currentText()})")
         self.btn_start.setEnabled(True)
+        self.btn_start.setStyleSheet("background-color: red; color: white;")
         self.btn_stop.setEnabled(False)
+        self.btn_stop.setStyleSheet("color: grey; background-color: white")
         self.Worker1_Opencv.stop()
 
     def Close_software(self):

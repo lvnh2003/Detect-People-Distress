@@ -19,6 +19,9 @@
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">background-color: beige;</string>
+  </property>
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
@@ -73,6 +76,9 @@
      <height>31</height>
     </rect>
    </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: white</string>
+   </property>
   </widget>
   <widget class="QLabel" name="label_3">
    <property name="geometry">
@@ -117,6 +123,9 @@
      <height>22</height>
     </rect>
    </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: white</string>
+   </property>
    <property name="maximum">
     <number>23</number>
    </property>
@@ -129,6 +138,9 @@
      <width>43</width>
      <height>22</height>
     </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: white</string>
    </property>
    <property name="maximum">
     <number>59</number>
@@ -157,7 +169,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>End:</string>
+    <string>Minute</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_7">
@@ -191,7 +203,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>End:</string>
+    <string>Hour</string>
    </property>
   </widget>
   <widget class="QSpinBox" name="end_M">
@@ -202,6 +214,9 @@
      <width>43</width>
      <height>22</height>
     </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: white</string>
    </property>
    <property name="maximum">
     <number>59</number>
@@ -215,6 +230,9 @@
      <width>43</width>
      <height>22</height>
     </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: white</string>
    </property>
    <property name="maximum">
     <number>23</number>
