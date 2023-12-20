@@ -1,5 +1,9 @@
-telepot
 opencv-python
-torchvision
 tqdm
+pyqt5
+ultralytics
+torch
+shapely
 seaborn
+playsound
+numpy
