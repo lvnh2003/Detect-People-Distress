@@ -12,9 +12,10 @@ from Tracking_Func import Tack_Object
 from ultralytics import YOLO
 from playsound import playsound
 import torch
-from datetime import time as timeDB
+from datetime import time as timeDB, datetime
 from funtions import DetectFunction
 from draw_detect import DrawDetect
+from add_camera import AddCam
 from NotifyMessage import NotifyMessage
 from Model.Train import Train
 from database import insert,listTrain
@@ -22,6 +23,7 @@ from CRUD.update import UpdateForm
 functions = DetectFunction()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = YOLO('./detect/train/weights/best.pt').float().to(device)
+trains = None
 if torch.cuda.is_available():
     print("run with GPU")
 def getPoint():
@@ -32,7 +34,11 @@ def getPoint():
             points.append([x, y])
     return np.array(points)
 points = getPoint()
-
+def getCameras():
+    with open('cameras.txt', 'r') as file:
+        cameras = [line.strip() for line in file]
+    return cameras
+cameras = getCameras()
 
 class ThreadClass(QThread):
     ImageUpdate = pyqtSignal(np.ndarray)
@@ -42,10 +48,8 @@ class ThreadClass(QThread):
     def play_sound(self):
         playsound("warning.wav")
     def run(self):
-        if camIndex == 0:
-            Capture = cv2.VideoCapture("7.mp4")
-        if camIndex == 1:
-            Capture = cv2.VideoCapture("5.mp4")
+        Capture = cv2.VideoCapture(cameras[camIndex])
+
 
         Capture.set(cv2.CAP_PROP_FRAME_HEIGHT,480)
         Capture.set(cv2.CAP_PROP_FRAME_WIDTH,640)
@@ -64,9 +68,18 @@ class ThreadClass(QThread):
                 if len(results[0]) > 0:
                     box = results[0].boxes.xyxy[0]
                     if self.draw_prediction(box):
-                        cv2.putText(frame_cap, "Fall detect!!!!", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
-                        sound_thread = threading.Thread(target=self.play_sound)
-                        sound_thread.start()
+                        time_current = datetime.now().time()
+                        for row_index, row_data in enumerate(trains):
+                            start_time = datetime.combine(datetime.today(),
+                                                          datetime.strptime(row_data[2], "%H:%M").time())
+                            end_time = datetime.combine(datetime.today(),
+                                                        datetime.strptime(row_data[3], "%H:%M").time())
+                            if start_time.time() <= time_current <= end_time.time():
+                                cv2.putText(frame_cap, "Fall detect!!!!", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 2,
+                                            (0, 0, 255), 2)
+                                sound_thread = threading.Thread(target=self.play_sound)
+                                sound_thread.start()
+
                 annotated_frame = results[0].plot()
                 self.ImageUpdate.emit(annotated_frame)
                 self.FPS.emit(fps)
@@ -126,8 +139,6 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.ui = uic.loadUi("Opencv_PiDash.ui",self)
-
-        self.camlist.addItems(["CAMERA1","CAMERA2"])
         self.btn_start.clicked.connect(self.StartWebCam)
         self.btn_start.setStyleSheet("background-color: red; color: white;")
         self.btn_stop.clicked.connect(self.StopWebcam)
@@ -174,18 +185,32 @@ class MainWindow(QMainWindow):
         self.update_form = UpdateForm(self)
         self.add_camera.setFixedSize(23,23)
         self.add_camera.setStyleSheet("background-color: #FFCC33; color : white")
+        self.add_camera.clicked.connect(self.open_cam)
+
+        self.camlist.addItems(self.convertNameCamera())
     def showModal(self):
         global camIndex
         try:
-            if camIndex == 0:
-                video = "7.mp4"
-            if camIndex == 1:
-                video = "5.mp4"
-            self.draw = DrawDetect(video,self)
+            self.draw = DrawDetect(cameras[camIndex],self)
             self.draw.show()
         except Exception as e:
             NotifyMessage("Choose camera first!!!",0)
-
+    def open_cam(self):
+        self.newCam = AddCam(self)
+        self.newCam.show()
+    def convertNameCamera(self):
+        names = []
+        if cameras is not None:
+            for i in range(len(cameras)):
+                names.append("CAMERA{}".format(i+1))
+            return names
+        return None
+    def resetListCamera(self):
+        global cameras
+        with open('cameras.txt', 'r') as file:
+            cameras = [line.strip() for line in file]
+        self.camlist.clear()
+        self.camlist.addItems(self.convertNameCamera())
 
     def get_randomColors(self,color):
         self.RanColor1 = color[0]
@@ -242,6 +267,7 @@ class MainWindow(QMainWindow):
         else:
             NotifyMessage("Please enter the name!!",0)
     def listDataToTable(self):
+        global trains
         trains = listTrain()
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.table.itemSelectionChanged.connect(self.data_action)

@@ -19,8 +19,7 @@ class DrawDetect(QtWidgets.QMainWindow):
         self.timer.start(30)  # Thời gian cập nhật khung hình (30ms)
 
         # Mở video bằng OpenCV tỉ lê 1.6
-        self.video_path = video
-        self.video_capture = cv2.VideoCapture(self.video_path)
+        self.video_capture = cv2.VideoCapture(video)
 
         # Hiển thị video lên QLabel
         self.display_screen.setScaledContents(True)
