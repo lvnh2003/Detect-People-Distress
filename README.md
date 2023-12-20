@@ -16,7 +16,6 @@ git clone https://github.com/lvnh2003/Detect-People-Distress.git
 Move to project 
 ````bash   
 cd Detect-People-Distress
-# Additional environment setup
 ````
 Install packages requirements
 ````bash   
