@@ -8,14 +8,13 @@ import cv2,time,sys,sysinfo
 import numpy as np
 import random as rnd
 from shapely.geometry import Point, Polygon
-from Tracking_Func import Tack_Object
 from ultralytics import YOLO
 from playsound import playsound
 import torch
 from datetime import time as timeDB, datetime
 from funtions import DetectFunction
 from draw_detect import DrawDetect
-from add_camera import AddCam
+from CRUD.add_camera import AddCam
 from NotifyMessage import NotifyMessage
 from Model.Train import Train
 from database import insert,listTrain
@@ -138,7 +137,7 @@ class randomColorClass(QThread):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.ui = uic.loadUi("Opencv_PiDash.ui",self)
+        self.ui = uic.loadUi("ui.Opencv_PiDash.ui",self)
         self.btn_start.clicked.connect(self.StartWebCam)
         self.btn_start.setStyleSheet("background-color: red; color: white;")
         self.btn_stop.clicked.connect(self.StopWebcam)
@@ -152,12 +151,6 @@ class MainWindow(QMainWindow):
         self.randomColor_usage.start()
         self.randomColor_usage.color.connect(self.get_randomColors)
 
-# Create Instance class
-
-        # Track object Functions
-        self.Track_Function1 = Tack_Object()
-        self.Track_Function2 = Tack_Object()
-        self.Track_Function3 = Tack_Object()
 
 
 

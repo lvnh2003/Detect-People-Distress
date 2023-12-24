@@ -8,7 +8,7 @@ from NotifyMessage import NotifyMessage
 class AddCam(QtWidgets.QMainWindow):
     def __init__(self, parent):
         super(AddCam, self).__init__(parent)
-        uic.loadUi("add.ui", self)
+        uic.loadUi("ui.add.ui", self)
         self.setWindowTitle("Add Camera")
         self.ipAddress.setStyleSheet("background-color:white")
         self.setStyleSheet("background-color: #DDDDDD")

@@ -10,7 +10,7 @@ from NotifyMessage import NotifyMessage
 class DrawDetect(QtWidgets.QMainWindow):
     def __init__(self,video,parent):
         super(DrawDetect, self).__init__(parent)
-        uic.loadUi("draw.ui", self)
+        uic.loadUi("ui.draw.ui", self)
         self.pushButton.clicked.connect(self.addNewPolygon)
         self.done.clicked.connect(self.drawed)
         # Tạo QTimer để liên tục cập nhật khung hình từ video
