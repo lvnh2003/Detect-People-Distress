@@ -9,7 +9,7 @@ class UpdateForm(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.train_id = None
-        uic.loadUi("update.ui", self)
+        uic.loadUi("ui.update.ui", self)
         self.setParent(parent)  # Set the parent after loading the UI
         self.setWindowTitle("Update Form")
         self.updateBtn.clicked.connect(self.update_train)
