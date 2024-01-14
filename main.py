@@ -1,6 +1,5 @@
 import threading
 from PyQt5 import uic
-from PyQt5.QtMultimedia import QCameraInfo
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QAbstractItemView, QHeaderView
 from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot, QTimer, QDateTime
 from PyQt5.QtGui import QImage, QPixmap
@@ -54,14 +53,11 @@ class ThreadClass(QThread):
         Capture.set(cv2.CAP_PROP_FRAME_HEIGHT,480)
         Capture.set(cv2.CAP_PROP_FRAME_WIDTH,640)
         self.ThreadActive = True
-        prev_frame_time = 0
-        new_frame_time = 0
+        prev_time = time.time()
+
         while self.ThreadActive:
             ret,frame_cap = Capture.read()
 
-            new_frame_time = time.time()
-            fps = 1/(new_frame_time-prev_frame_time)
-            prev_frame_time = new_frame_time
             self.draw_polygon(frame_cap, points)
             if ret:
                 results = model(frame_cap, conf=0.7, verbose=False)
@@ -82,7 +78,12 @@ class ThreadClass(QThread):
 
                 annotated_frame = results[0].plot()
                 self.ImageUpdate.emit(annotated_frame)
-                self.FPS.emit(fps)
+                # Calculate FPS
+                current_time = time.time()
+                elapsed_time = current_time - prev_time
+                fps = 1 / elapsed_time
+                prev_time = current_time
+                self.FPS.emit(int(fps))
 
     def stop(self):
         self.ThreadActive = False
@@ -152,12 +153,6 @@ class MainWindow(QMainWindow):
         self.randomColor_usage.start()
         self.randomColor_usage.color.connect(self.get_randomColors)
 
-# Create Instance class
-
-        # Track object Functions
-        self.Track_Function1 = Tack_Object()
-        self.Track_Function2 = Tack_Object()
-        self.Track_Function3 = Tack_Object()
 
 
 
@@ -336,7 +331,6 @@ class MainWindow(QMainWindow):
 
             global camIndex
             camIndex = self.camlist.currentIndex()
-
         # Opencv QThread
             self.Worker1_Opencv = ThreadClass()
             self.Worker1_Opencv.ImageUpdate.connect(self.opencv_emit)
