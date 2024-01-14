@@ -1,6 +1,5 @@
 import threading
 from PyQt5 import uic
-from PyQt5.QtMultimedia import QCameraInfo
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QAbstractItemView, QHeaderView
 from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot, QTimer, QDateTime
 from PyQt5.QtGui import QImage, QPixmap
