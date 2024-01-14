@@ -8,16 +8,16 @@ from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QImage, QPixmap
 from NotifyMessage import NotifyMessage
 class DrawDetect(QtWidgets.QMainWindow):
-    def __init__(self,video,parent):
+    def __init__(self,video,camIndex,parent):
         super(DrawDetect, self).__init__(parent)
-        uic.loadUi("ui.draw.ui", self)
+        uic.loadUi("ui/draw.ui", self)
         self.pushButton.clicked.connect(self.addNewPolygon)
         self.done.clicked.connect(self.drawed)
         # Tạo QTimer để liên tục cập nhật khung hình từ video
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_frame)
         self.timer.start(30)  # Thời gian cập nhật khung hình (30ms)
-
+        self.camIndex = camIndex
         # Mở video bằng OpenCV tỉ lê 1.6
         self.video_capture = cv2.VideoCapture(video)
 
@@ -82,8 +82,8 @@ class DrawDetect(QtWidgets.QMainWindow):
         self.points.clear()
     def drawed(self):
         self.points.append(self.points[0])
-        with open("points.txt", "w") as file:
-            # Iterate over the points list
+        with open("CAMERA{}.txt".format(self.camIndex+1), "w") as file:
+        #     # Iterate over the points list
             for point in self.points:
                 # Convert the point coordinates to a string
                 point_str = f"{point[0]}, {point[1]}"

@@ -8,7 +8,7 @@ from NotifyMessage import NotifyMessage
 class AddCam(QtWidgets.QMainWindow):
     def __init__(self, parent):
         super(AddCam, self).__init__(parent)
-        uic.loadUi("ui.add.ui", self)
+        uic.loadUi("ui/add.ui", self)
         self.setWindowTitle("Add Camera")
         self.ipAddress.setStyleSheet("background-color:white")
         self.setStyleSheet("background-color: #DDDDDD")
@@ -20,6 +20,7 @@ class AddCam(QtWidgets.QMainWindow):
         self.timer.timeout.connect(self.update_frame)
         self.link = None
         self.video_capture = None
+        self.cameras = self.getCameras()
 
         # Hiển thị video lên QLabel
         self.display_screen.setScaledContents(True)
@@ -59,8 +60,15 @@ class AddCam(QtWidgets.QMainWindow):
     def addCamera(self):
         with open('cameras.txt', 'a') as file:
             file.write(self.link+"\n")
+        lastIndex = len(self.cameras)
+        open('CAMERA{}.txt'.format(lastIndex+1),'w')
         NotifyMessage("Add new camera sucessfully")
         self.parent().resetListCamera()
         self.close()
     def closeWindow(self):
         self.close()
+
+    def getCameras(self):
+        with open('cameras.txt', 'r') as file:
+            cameras = [line.strip() for line in file]
+        return cameras

@@ -12,26 +12,29 @@ from ultralytics import YOLO
 from playsound import playsound
 import torch
 from datetime import time as timeDB, datetime
-from funtions import DetectFunction
 from draw_detect import DrawDetect
 from CRUD.add_camera import AddCam
 from NotifyMessage import NotifyMessage
 from Model.Train import Train
 from database import insert,listTrain
 from CRUD.update import UpdateForm
-functions = DetectFunction()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = YOLO('./detect/train/weights/best.pt').float().to(device)
 trains = None
+camIndex = 0
 if torch.cuda.is_available():
     print("run with GPU")
 def getPoint():
+    global camIndex
     points = []
-    with open('points.txt', 'r') as file:
-        for line in file:
-            x, y = map(int, line.strip().split(','))
-            points.append([x, y])
-    return np.array(points)
+    try:
+        with open("CAMERA{}.txt".format(camIndex+1), 'r') as file:
+            for line in file:
+                x, y = map(int, line.strip().split(','))
+                points.append([x, y])
+        return np.array(points)
+    except:
+        return None
 points = getPoint()
 def getCameras():
     with open('cameras.txt', 'r') as file:
@@ -90,6 +93,8 @@ class ThreadClass(QThread):
     def draw_polygon(self, image, points):
         if len(points) > 1:
             cv2.polylines(image, [np.array(points)], isClosed=False, color=(0, 0, 255), thickness=2)
+        else:
+            pass
     def draw_prediction(self, box):
         x_min, y_min, x_max, y_max = box.tolist()
         centroid = ((x_min + x_max) // 2, (y_min + y_max) // 2)
@@ -137,7 +142,7 @@ class randomColorClass(QThread):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.ui = uic.loadUi("ui.Opencv_PiDash.ui",self)
+        self.ui = uic.loadUi("ui/Opencv_PiDash.ui",self)
         self.btn_start.clicked.connect(self.StartWebCam)
         self.btn_start.setStyleSheet("background-color: red; color: white;")
         self.btn_stop.clicked.connect(self.StopWebcam)
@@ -184,7 +189,7 @@ class MainWindow(QMainWindow):
     def showModal(self):
         global camIndex
         try:
-            self.draw = DrawDetect(cameras[camIndex],self)
+            self.draw = DrawDetect(cameras[camIndex],camIndex,self)
             self.draw.show()
         except Exception as e:
             NotifyMessage("Choose camera first!!!",0)
@@ -321,6 +326,7 @@ class MainWindow(QMainWindow):
 #----------------------------------------------------------------------------------------------------
     def StartWebCam(self,pin):
         try:
+            global points
             self.textEdit.append(f"{self.DateTime.toString('d MMMM yy hh:mm:ss')}: Start Webcam ({self.camlist.currentText()})")
             self.btn_stop.setEnabled(True)
             self.btn_stop.setStyleSheet("background-color: red; color: white;")
@@ -329,7 +335,7 @@ class MainWindow(QMainWindow):
 
             global camIndex
             camIndex = self.camlist.currentIndex()
-
+            points = getPoint()
         # Opencv QThread
             self.Worker1_Opencv = ThreadClass()
             self.Worker1_Opencv.ImageUpdate.connect(self.opencv_emit)
@@ -357,9 +363,10 @@ class MainWindow(QMainWindow):
         else : self.Qlabel_greenlight.setStyleSheet("background-color: rgb(184, 230, 191); border-radius:30px")
         self.Status_lamp[0] = not self.Status_lamp[0]
     def newPoint(self):
+        global camIndex
         global points
         pointsNew = []
-        with open('points.txt', 'r') as file:
+        with open("CAMERA{}.txt".format(camIndex+1), 'r') as file:
             for line in file:
                 x, y = map(int, line.strip().split(','))
                 pointsNew.append([x, y])
