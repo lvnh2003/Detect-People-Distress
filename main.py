@@ -17,12 +17,16 @@ from NotifyMessage import NotifyMessage
 from Model.Train import Train
 from database import insert,listTrain
 from CRUD.update import UpdateForm
+# get device for run program if gpu exist use gpu and else use cpu
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+# base on model trained 
 model = YOLO('./detect/train/weights/best.pt').float().to(device)
 trains = None
 camIndex = 0
+# check program is running with gpu
 if torch.cuda.is_available():
     print("run with GPU")
+# assign array points polygon of camera for points global
 def getPoint():
     global camIndex
     points = []
@@ -36,7 +40,7 @@ def getPoint():
         return None
 points = getPoint()
 def getCameras():
-    with open('cameras.txt', 'r') as file:
+    with open('resource/cameras.txt', 'r') as file:
         cameras = [line.strip() for line in file]
     return cameras
 cameras = getCameras()
@@ -46,8 +50,11 @@ class ThreadClass(QThread):
     FPS = pyqtSignal(int)
     global camIndex
 
+    # function play sound when detect person falling in video
     def play_sound(self):
-        playsound("warning.wav")
+        playsound("resource/warning.wav")
+
+    # run camera 
     def run(self):
         Capture = cv2.VideoCapture(cameras[camIndex])
 
@@ -63,14 +70,20 @@ class ThreadClass(QThread):
             new_frame_time = time.time()
             fps = 1/(new_frame_time-prev_frame_time)
             prev_frame_time = new_frame_time
+            # draw polygon into video a polygon
             self.draw_polygon(frame_cap, points)
             if ret:
+                # use model for detect object "fall" with 70% confidence 
                 results = model(frame_cap, conf=0.7, verbose=False)
+                # if detect falling 
                 if len(results[0]) > 0:
+                    # get attributes of object 
                     box = results[0].boxes.xyxy[0]
+                    # if object is falling in polygon
                     if self.draw_prediction(box):
                         time_current = datetime.now().time()
-                        for row_index, row_data in enumerate(trains):
+                        # check object is falling in the time the trains is comming
+                        for _  , row_data in enumerate(trains):
                             start_time = datetime.combine(datetime.today(),
                                                           datetime.strptime(row_data[2], "%H:%M").time())
                             end_time = datetime.combine(datetime.today(),
@@ -89,21 +102,25 @@ class ThreadClass(QThread):
         self.ThreadActive = False
         self.quit()
 
+    # draw polygon through points
     def draw_polygon(self, image, points):
         if len(points) > 1:
             cv2.polylines(image, [np.array(points)], isClosed=False, color=(0, 0, 255), thickness=2)
         else:
             pass
+
+     # function check object is falling in polygon
     def draw_prediction(self, box):
         x_min, y_min, x_max, y_max = box.tolist()
         centroid = ((x_min + x_max) // 2, (y_min + y_max) // 2)
         return self.isInside(centroid)
 
+    # check point is inside a polygon
     def isInside(self, centroid):
         polygon = Polygon(points)
         centroid = Point(centroid)
         return polygon.contains(centroid)
-# kiểm tra ram & cpu
+
 class boardInfoClass(QThread):
     cpu = pyqtSignal(float)
     ram = pyqtSignal(tuple)
@@ -141,7 +158,7 @@ class randomColorClass(QThread):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.ui = uic.loadUi("ui/Opencv_PiDash.ui",self)
+        self.ui = uic.loadUi("ui/main.ui",self)
         self.btn_start.clicked.connect(self.StartWebCam)
         self.btn_start.setStyleSheet("background-color: red; color: white;")
         self.btn_stop.clicked.connect(self.StopWebcam)
@@ -204,7 +221,7 @@ class MainWindow(QMainWindow):
         return None
     def resetListCamera(self):
         global cameras
-        with open('cameras.txt', 'r') as file:
+        with open('resource/cameras.txt', 'r') as file:
             cameras = [line.strip() for line in file]
         self.camlist.clear()
         self.camlist.addItems(self.convertNameCamera())

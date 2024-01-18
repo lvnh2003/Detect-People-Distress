@@ -8,28 +8,30 @@ from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QImage, QPixmap
 from NotifyMessage import NotifyMessage
 class DrawDetect(QtWidgets.QMainWindow):
+
     def __init__(self,video,camIndex,parent):
         super(DrawDetect, self).__init__(parent)
+        # load ui from folder
         uic.loadUi("ui/draw.ui", self)
         self.pushButton.clicked.connect(self.addNewPolygon)
         self.done.clicked.connect(self.drawed)
-        # Tạo QTimer để liên tục cập nhật khung hình từ video
+        # Create QTimer để liên tục cập nhật khung hình từ video
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_frame)
-        self.timer.start(30)  # Thời gian cập nhật khung hình (30ms)
+        self.timer.start(30)  # Update time frame (30ms)
         self.camIndex = camIndex
-        # Mở video bằng OpenCV tỉ lê 1.6
         self.video_capture = cv2.VideoCapture(video)
 
-        # Hiển thị video lên QLabel
+        # Display into QLabel
         self.display_screen.setScaledContents(True)
 
-        # Danh sách các điểm trong đa giác
+        # Array points of polygon
         self.points = []
 
-        # Xử lý sự kiện click chuột
+        # When click mouse left for polygon detect 
         self.display_screen.mousePressEvent = self.handle_left_click
 
+    # function Polygon drawing event handler
     def handle_left_click(self, event):
         if event.button() == QtCore.Qt.LeftButton:
             label_width = self.display_screen.width()
@@ -51,19 +53,20 @@ class DrawDetect(QtWidgets.QMainWindow):
             self.points.append([frame_x, frame_y])
 
     def update_frame(self):
-        # Đọc khung hình tiếp theo từ video
+        
         ret, frame = self.video_capture.read()
 
         if ret:
-            # Vẽ đa giác trên khung hình
+            # draw polygon into frame
             frame = self.draw_polygon(frame, self.points)
 
             # Chuyển đổi khung hình từ cv2 sang QImage
             qt_image = self.convert_cv2_to_qt(frame)
 
-            # Hiển thị khung hình trên QLabel
+            # Display frame into QLabel
             self.display_screen.setPixmap(QPixmap.fromImage(qt_image))
 
+    # function draw points in image and connect betwen points
     def draw_polygon(self, frame, points):
         for point in points:
             frame = cv2.circle(frame, (point[0], point[1]), 5, (0, 0, 255), -1)
@@ -72,18 +75,22 @@ class DrawDetect(QtWidgets.QMainWindow):
         return frame
 
     def convert_cv2_to_qt(self, cv_image):
-        # Chuyển đổi hình ảnh từ cv2 sang QImage
+        # Convert frame from cv2 to QImage
         rgb_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
+        # get height, width, ch is color tuple (no color convert RGB)
         h, w, ch = rgb_image.shape
+        # bytes needs each image line 
         bytes_per_line = ch * w
         qt_image = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format_RGB888)
         return qt_image
+    
     def addNewPolygon(self):
         self.points.clear()
+    # click "Done" after drawed
     def drawed(self):
         self.points.append(self.points[0])
         with open("CAMERA{}.txt".format(self.camIndex+1), "w") as file:
-        #     # Iterate over the points list
+        # Iterate over the points list
             for point in self.points:
                 # Convert the point coordinates to a string
                 point_str = f"{point[0]}, {point[1]}"
